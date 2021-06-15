@@ -107,6 +107,31 @@ static const gdb_register_map gdb_register_map_i486 =
 };
 
 //-------------------------------------------------------------------------
+static const gdb_register_map gdb_register_map_i8086 =
+{
+	"i8086",
+	"org.gnu.gdb.i386.core",
+	{
+		{ "AX",     "eax",    false, TYPE_INT, 32 },
+		{ "CX",     "ecx",    false, TYPE_INT, 32 },
+		{ "DX",     "edx",    false, TYPE_INT, 32 },
+		{ "BX",     "ebx",    false, TYPE_INT, 32 },
+		{ "SP",     "esp",    true,  TYPE_DATA_POINTER, 32 },
+		{ "BP",     "ebp",    true,  TYPE_DATA_POINTER, 32 },
+		{ "SI",     "esi",    false, TYPE_INT, 32 },
+		{ "DI",     "edi",    false, TYPE_INT, 32 },
+		{ "CURPC",     "eip",    true,  TYPE_CODE_POINTER, 32 },
+		{ "CURFLAGS", "eflags", false, TYPE_INT, 32 }, // TODO describe bitfield
+		{ "CS",      "cs",     false, TYPE_INT, 32 },
+		{ "SS",      "ss",     false, TYPE_INT, 32 },
+		{ "DS",      "ds",     false, TYPE_INT, 32 },
+		{ "ES",      "es",     false, TYPE_INT, 32 },
+		{ "ES",      "fs",     false, TYPE_INT, 32 },
+		{ "ES",      "gs",     false, TYPE_INT, 32 },
+	}
+};
+
+//-------------------------------------------------------------------------
 static const gdb_register_map gdb_register_map_arm7 =
 {
 	"arm",
@@ -402,6 +427,8 @@ static const gdb_register_map gdb_register_map_score7 =
 
 //-------------------------------------------------------------------------
 static const std::map<std::string, const gdb_register_map &> gdb_register_maps = {
+	{ "i8086",      gdb_register_map_i8086 },
+	{ "i8088",      gdb_register_map_i8086 },
 	{ "i486",       gdb_register_map_i486 },
 	{ "arm7_le",    gdb_register_map_arm7 },
 	{ "r4600",      gdb_register_map_r4600 },
