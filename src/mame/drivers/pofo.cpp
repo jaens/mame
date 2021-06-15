@@ -57,7 +57,7 @@ namespace {
 
 #define LOG 0
 
-#define M80C88A_TAG     "u1"
+#define M80C88A_TAG     "maincpu"
 #define HD61830_TAG     "hd61830"
 #define PCD3311T_TAG    "pcd3311t"
 #define TIMER_TICK_TAG  "tick"
