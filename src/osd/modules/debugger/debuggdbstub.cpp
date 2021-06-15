@@ -622,6 +622,8 @@ int debug_gdbstub::readchar()
 			return -1;
 	}
 
+	osd_printf_info("_%c_", m_readbuf[m_readbuf_offset]);
+
 	return (int) m_readbuf[m_readbuf_offset++];
 }
 
@@ -682,7 +684,7 @@ void debug_gdbstub::wait_for_debugger(device_t &device, bool firststop)
 
 		m_is_be = m_address_space->endianness() == ENDIANNESS_BIG;
 
-#if 0
+// #if 0
 		for ( const auto &entry: m_state->state_entries() )
 		{
 			const char *symbol = entry->symbol();
@@ -692,7 +694,7 @@ void debug_gdbstub::wait_for_debugger(device_t &device, bool firststop)
 			const std::string &format_string = entry->format_string();
 			osd_printf_info("[%3d] datasize %d mask %016" PRIx64 " [%s] [%s]\n", index, datasize, datamask, symbol, format_string);
 		}
-#endif
+// #endif
 
 		const gdb_register_map &register_map = it->second;
 		m_gdb_arch = register_map.arch;
@@ -727,10 +729,10 @@ void debug_gdbstub::wait_for_debugger(device_t &device, bool firststop)
 				osd_printf_info("gdbstub: could not find register [%s]\n", reg.gdb_name);
 		}
 
-#if 0
+// #if 0
 		for ( const auto &reg: m_gdb_registers )
 			osd_printf_info(" %3d (%d) %d %d [%s]\n", reg.gdb_regnum, reg.state_index, reg.gdb_bitsize, reg.gdb_type, reg.gdb_name);
-#endif
+// #endif
 
 		std::string socket_name = string_format("socket.localhost:%d", m_debugger_port);
 		osd_file::error filerr = m_socket.open(socket_name);
@@ -1274,6 +1276,7 @@ void debug_gdbstub::handle_packet()
 	cmd_reply reply = REPLY_UNSUPPORTED;
 
 	const char *buf = (const char *) m_packet_buf+1;
+	osd_printf_info("gdbstub: Received command %c\n", m_packet_buf[0]);
 	switch ( m_packet_buf[0] )
 	{
 		case '!': reply = handle_exclamation(buf); break;
@@ -1388,6 +1391,7 @@ bool debug_gdbstub::is_thread_id_ok(const char *buf)
 void debug_gdbstub::handle_character(char ch)
 {
 	int8_t nibble;
+	// osd_printf_info("C[%02X %d] ", ch, m_readbuf_state);
 	switch ( m_readbuf_state )
 	{
 		case PACKET_START:
@@ -1399,7 +1403,8 @@ void debug_gdbstub::handle_character(char ch)
 			}
 			else if ( ch == '\x03' )
 			{
-				m_debugger_cpu->set_execution_stopped();
+				osd_printf_info("gdbstub: Interrupted\n");
+				m_maincpu->debug()->halt_on_next_instruction("gdb stub interrupt");
 			}
 			else if ( ch == '+')
 			{
