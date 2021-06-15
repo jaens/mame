@@ -659,6 +659,10 @@ uint8_t portfolio_state::io_r(offs_t offset)
 		// Magic port to detect the Pofo
 		data = 0x61;
 	}
+	else
+	{
+		if (LOG) logerror("%s Invalid IO read %04x\n", machine().time().as_string(), offset);
+	}
 
 	data = m_exp->nrdi_r(offset, data, iom, bcom, ncc1);
 
