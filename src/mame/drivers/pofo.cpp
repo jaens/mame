@@ -77,6 +77,7 @@ public:
 	portfolio_state(const machine_config &mconfig, device_type type, const char *tag) :
 		driver_device(mconfig, type, tag),
 		m_maincpu(*this, M80C88A_TAG),
+		m_palette(*this, "palette"),
 		m_lcdc(*this, HD61830_TAG),
 		m_keyboard(*this, "keyboard"),
 		m_dtmf(*this, PCD3311T_TAG),
@@ -135,18 +136,20 @@ private:
 	void select_w(uint8_t data);
 	void counter_w(offs_t offset, uint8_t data);
 	void contrast_w(uint8_t data);
+	uint8_t contrast_r();
 
 	DECLARE_WRITE_LINE_MEMBER( eint_w );
 	DECLARE_WRITE_LINE_MEMBER( wake_w );
 	DECLARE_WRITE_LINE_MEMBER( keyboard_int_w );
 
-	void portfolio_palette(palette_device &palette) const;
+	void update_palette(uint8_t contrast);
 	TIMER_DEVICE_CALLBACK_MEMBER(system_tick);
 	TIMER_DEVICE_CALLBACK_MEMBER(counter_tick);
 	uint8_t hd61830_rd_r(offs_t offset);
 	IRQ_CALLBACK_MEMBER(portfolio_int_ack);
 
 	required_device<cpu_device> m_maincpu;
+	required_device<palette_device> m_palette;
 	required_device<hd61830_device> m_lcdc;
 	required_device<pofo_keyboard_device> m_keyboard;
 	required_device<pcd3311_device> m_dtmf;
@@ -163,6 +166,7 @@ private:
 	uint8_t m_ie;
 	uint16_t m_counter;
 	int m_rom_b;
+	uint8_t m_contrast;
 };
 
 
@@ -649,6 +653,10 @@ uint8_t portfolio_state::io_r(offs_t offset)
 			}
 			break;
 
+		case 6:
+			data = contrast_r();
+			break;
+
 		case 7:
 			bcom = 0;
 			break;
@@ -794,25 +802,39 @@ INPUT_PORTS_END
 //**************************************************************************
 
 //-------------------------------------------------
-//  contrast_w -
+//  Palette & contast
 //-------------------------------------------------
 
 void portfolio_state::contrast_w(uint8_t data)
 {
 	if (LOG) logerror("%s %s CONTRAST %02x\n", machine().time().as_string(), machine().describe_context(), data);
+
+	m_contrast = data;
+
+	update_palette(m_contrast);
 }
 
-
-//-------------------------------------------------
-//  PALETTE_INIT( portfolio )
-//-------------------------------------------------
-
-void portfolio_state::portfolio_palette(palette_device &palette) const
+uint8_t portfolio_state::contrast_r()
 {
-	palette.set_pen_color(0, rgb_t(142, 193, 172));
-	palette.set_pen_color(1, rgb_t(67, 71, 151));
+	return m_contrast;
 }
 
+void portfolio_state::update_palette(uint8_t contrast)
+{
+	rgb_t bg(142, 193, 172);
+	rgb_t on(67, 71, 151);
+
+	m_palette->set_pen_color(0, bg);
+
+	// Apply a minimum contrast for usability.
+	contrast = std::max(contrast, (uint8_t)0x10U);
+
+	auto darker = (bg - on);
+	// The higher the contrast, the darker the ON pixel color will be (relative to the background).
+	// 0x80 is the base contrast, in which case the color will be unchanged.
+	auto adjust = (darker + darker).scale8(contrast);
+	m_palette->set_pen_color(1, bg - adjust);
+}
 
 //-------------------------------------------------
 //  HD61830_INTERFACE( lcdc_intf )
@@ -870,6 +892,9 @@ void portfolio_state::machine_start()
 	save_item(NAME(m_ie));
 	save_item(NAME(m_counter));
 	save_item(NAME(m_rom_b));
+	save_item(NAME(m_contrast));
+
+	update_palette(0x80);
 
 	m_ip = 0;
 }
@@ -898,7 +923,7 @@ void portfolio_state::portfolio(machine_config &config)
 	screen.set_visarea(0, 240-1, 0, 64-1);
 	screen.set_palette("palette");
 
-	PALETTE(config, "palette", FUNC(portfolio_state::portfolio_palette), 2);
+	PALETTE(config, m_palette, palette_device::BLACK, 2);
 
 	GFXDECODE(config, "gfxdecode", "palette", gfx_portfolio);
 
