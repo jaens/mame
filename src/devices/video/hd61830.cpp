@@ -59,14 +59,15 @@ static constexpr int CYCLES[] =
 	4, 4, 4, 4, 4, -1, -1, -1, 4, 4, 4, 4, 6, 6, 36, 36
 };
 
-static constexpr int MODE_EXTERNAL_CG      = 0x01;
-static constexpr int MODE_GRAPHIC          = 0x02;
-static constexpr int MODE_CURSOR           = 0x04;
-static constexpr int MODE_BLINK            = 0x08;
-static constexpr int MODE_MASTER           = 0x10;
-static constexpr int MODE_DISPLAY_ON       = 0x20;
-
-
+enum
+{
+	MODE_EXTERNAL_CG = 0x01,
+	MODE_GRAPHIC     = 0x02,
+	MODE_CURSOR      = 0x04,
+	MODE_BLINK       = 0x08,
+	MODE_MASTER      = 0x10,
+	MODE_DISPLAY_ON  = 0x20,
+};
 
 //**************************************************************************
 //  LIVE DEVICE
