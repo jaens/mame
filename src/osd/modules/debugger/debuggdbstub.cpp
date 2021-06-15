@@ -1297,8 +1297,10 @@ void debug_gdbstub::handle_packet()
 		send_reply("OK");
 	else if ( reply == REPLY_ENN )
 		send_reply("E01");
-	else if ( reply == REPLY_UNSUPPORTED )
+	else if ( reply == REPLY_UNSUPPORTED ) {
+		osd_printf_info("gdbstub: Unsupported command 0x%02X", m_packet_buf[0]);
 		send_reply("");
+	}
 }
 
 //-------------------------------------------------------------------------
@@ -1398,6 +1400,14 @@ void debug_gdbstub::handle_character(char ch)
 			else if ( ch == '\x03' )
 			{
 				m_debugger_cpu->set_execution_stopped();
+			}
+			else if ( ch == '+')
+			{
+				// Client acknowledged, nothing to be done
+			}
+			else
+			{
+				osd_printf_info("gdbstub: Unknown packet header %02X\n", ch);
 			}
 			break;
 		case PACKET_DATA:
